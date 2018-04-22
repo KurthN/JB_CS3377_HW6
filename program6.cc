@@ -15,7 +15,7 @@
 #define MATRIX_WIDTH 3
 #define MATRIX_HEIGHT 5
 #define BOX_WIDTH 20
-#define MATRIX_NAME_STRING "Test Matrix"
+#define MATRIX_NAME_STRING "Binary File Contents"
 
 using namespace std;
 
@@ -76,17 +76,20 @@ int main()
   BinaryFileRecord *record3 = new BinaryFileRecord();
   BinaryFileRecord *record4 = new BinaryFileRecord();
 
-  //Note, non-portable code here:
+  /*Note, non-portable code here:
+    Being careful not to read in records that aren't there. Of course, 
+    this assumes that there's a header and that numRecords is correct.
+  */
   binFile.read((char *) header, sizeof(BinaryFileHeader));
-  binFile.read((char *) record1, sizeof(BinaryFileRecord));
-  binFile.read((char *) record2, sizeof(BinaryFileRecord));
-  binFile.read((char *) record3, sizeof(BinaryFileRecord));
-  binFile.read((char *) record4, sizeof(BinaryFileRecord));
+  if(header->numRecords>0)
+    binFile.read((char *) record1, sizeof(BinaryFileRecord));
+  if(header->numRecords>1)
+    binFile.read((char *) record2, sizeof(BinaryFileRecord));
+  if(header->numRecords>2)
+    binFile.read((char *) record3, sizeof(BinaryFileRecord));
+  if(header->numRecords>3)
+    binFile.read((char *) record4, sizeof(BinaryFileRecord));
 
-
-  //Test
-  cout<<string("Version ")<<to_string(header->versionNumber).c_str()<<endl;
-  //  cout<<"Version: "<<header->versionNumber<<endl;
 
  
 
@@ -144,6 +147,7 @@ int main()
   setCDKMatrixCell(myMatrix, 1, 2, string("Version: " + to_string(header->versionNumber)).c_str());
   setCDKMatrixCell(myMatrix, 1, 3, string("NumRecords: " + to_string(header->numRecords)).c_str());
   //Set second row:
+  //For each of these, we use numrecords to insure that something valid is realy there.
   if(header->numRecords>0){
     setCDKMatrixCell(myMatrix, 2, 1, string("strlen: " + to_string(record1->strLength)).c_str());
     setCDKMatrixCell(myMatrix, 2, 2, string(record1->stringBuffer).c_str());
