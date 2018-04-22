@@ -1,27 +1,96 @@
 /*
- * Usage of CDK Matrix
- *
- * File:   example1.cc
- * Author: Stephen Perkins
- * Email:  stephen.perkins@utdallas.edu
+ * Joseph Baccary, CS3377, jcb150630@utd.edu
+ * CDK display code is from Dr Perkins' example
  */
 
 #include <iostream>
 #include "cdk.h"
+#include <stdint.h>
+#include <string>
+#include <fstream>
+#include <stdlib.h>
+#include <iomanip>
+#include <sstream> 
 
-
-#define MATRIX_WIDTH 4
-#define MATRIX_HEIGHT 3
-#define BOX_WIDTH 15
+#define MATRIX_WIDTH 3
+#define MATRIX_HEIGHT 5
+#define BOX_WIDTH 20
 #define MATRIX_NAME_STRING "Test Matrix"
 
 using namespace std;
 
 
+/*Declare the classes that we'll be working with. Yes, this would usually bein 
+the header file. No, I can't be bothered to add another when it isn't necessary.*/
+class BinaryFileHeader
+{
+public:
+  uint32_t magicNumber; /* Should be 0xFEEDFACE in the example*/
+  uint32_t versionNumber;
+  uint64_t numRecords;
+};
+/*
+ * Records in the file have a fixed length buffer
+ * that will hold a C-Style string. This is the
+ * size of the fixed length buffer.
+ */
+const int maxRecordStringLength = 25;
+class BinaryFileRecord
+{
+public:
+  uint8_t strLength;
+  char stringBuffer[maxRecordStringLength];
+};
+
+
+
+/* Convert the ints to hex strings curtesy of stackoverflow:
+   https://stackoverflow.com/questions/5100718/integer-to-hex-string-in-c
+   Plus a tweak for uppercase*/
+template< typename T >
+std::string int_to_hex( T i )
+{
+  std::stringstream stream;
+  stream << "0x" <<std::uppercase 
+         << std::setfill ('0') << std::setw(sizeof(T)*2) 
+         << std::hex << i;
+  return stream.str();
+}
+
+
 int main()
 {
 
-  WINDOW	*window;
+  //Initialize file. 
+  ifstream binFile ("cs3377.bin", ios::in | ios::binary);
+  //binFile.open ("cs3377.bin");
+  if(!binFile.is_open()){
+    cout<<"Error: cannot open cs3377.bin"<<endl;
+    return 1;
+  }
+
+
+  BinaryFileHeader *header = new BinaryFileHeader();
+  BinaryFileRecord *record1 = new BinaryFileRecord();
+  BinaryFileRecord *record2 = new BinaryFileRecord();
+  BinaryFileRecord *record3 = new BinaryFileRecord();
+  BinaryFileRecord *record4 = new BinaryFileRecord();
+
+  //Note, non-portable code here:
+  binFile.read((char *) header, sizeof(BinaryFileHeader));
+  binFile.read((char *) record1, sizeof(BinaryFileRecord));
+  binFile.read((char *) record2, sizeof(BinaryFileRecord));
+  binFile.read((char *) record3, sizeof(BinaryFileRecord));
+  binFile.read((char *) record4, sizeof(BinaryFileRecord));
+
+
+  //Test
+  cout<<string("Version ")<<to_string(header->versionNumber).c_str()<<endl;
+  //  cout<<"Version: "<<header->versionNumber<<endl;
+
+ 
+
+ WINDOW	*window;
   CDKSCREEN	*cdkscreen;
   CDKMATRIX     *myMatrix;           // CDK Screen Matrix
 
@@ -65,10 +134,37 @@ int main()
   /* Display the Matrix */
   drawCDKMatrix(myMatrix, true);
 
+
   /*
-   * Dipslay a message
+   * Display things
    */
-  setCDKMatrixCell(myMatrix, 2, 2, "Test Message");
+
+  //Set first row:
+  setCDKMatrixCell(myMatrix, 1, 1, string("Magic: " + int_to_hex(header->magicNumber)).c_str());
+  setCDKMatrixCell(myMatrix, 1, 2, string("Version: " + to_string(header->versionNumber)).c_str());
+  setCDKMatrixCell(myMatrix, 1, 3, string("NumRecords: " + to_string(header->numRecords)).c_str());
+  //Set second row:
+  if(header->numRecords>0){
+    setCDKMatrixCell(myMatrix, 2, 1, string("strlen: " + to_string(record1->strLength)).c_str());
+    setCDKMatrixCell(myMatrix, 2, 2, string(record1->stringBuffer).c_str());
+  }
+  //set third row
+  if(header->numRecords>1){
+    setCDKMatrixCell(myMatrix, 3, 1, string("strlen: " + to_string(record2->strLength)).c_str());
+    setCDKMatrixCell(myMatrix, 3, 2, string(record2->stringBuffer).c_str());
+  }
+  //set fourth row
+  if(header->numRecords>2){
+    setCDKMatrixCell(myMatrix, 4, 1, string("strlen: " + to_string(record3->strLength)).c_str());
+    setCDKMatrixCell(myMatrix, 4, 2, string(record3->stringBuffer).c_str());
+  }
+  //set last row
+  if(header->numRecords>3){
+    setCDKMatrixCell(myMatrix, 5, 1, string("strlen: " + to_string(record4->strLength)).c_str());
+    setCDKMatrixCell(myMatrix, 5, 2, string(record4->stringBuffer).c_str());
+  }
+
+
   drawCDKMatrix(myMatrix, true);    /* required  */
 
   /* So we can see results, pause until a key is pressed. */
@@ -77,4 +173,12 @@ int main()
 
   // Cleanup screen
   endCDK();
+  //Cleanup memory
+  delete record1;
+  delete record2;
+  delete record3;
+  delete record4;
+  delete header;
+
+  return 0;
 }

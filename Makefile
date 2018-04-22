@@ -5,7 +5,7 @@
 #
 
 CXX = g++
-CXXFLAGS = -Wall -g 
+CXXFLAGS = -Wall -g -std=c++11
 CPPFLAGS = -I/scratch/perkins/include
 LDFLAGS = -L/scratch/perkins/lib
 LDLIBS = -lcdk -lcurses 
@@ -15,9 +15,9 @@ LDLIBS = -lcdk -lcurses
 # PROJECTNAME is a descriptive name used for the backup target
 # This should not contain spaces or special characters
 
-EXECFILE = cdkexample
+EXECFILE = program6
 
-OBJS = cdkexample.o
+OBJS = program6.o
 
 
 all: $(EXECFILE)
