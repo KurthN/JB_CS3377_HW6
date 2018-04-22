@@ -1,7 +1,5 @@
 #
-# UTD CS3377 CDK Example
-# Dr. Perkins
-# stephen.perkins@utdallas.edu
+# Joseph Baccary, CS 3377, jcb150630@utd.edu
 #
 
 CXX = g++
@@ -28,4 +26,3 @@ clean:
 
 $(EXECFILE): $(OBJS)
 	$(CXX) -o $@ $(OBJS) $(LDFLAGS) $(LDLIBS)
-
